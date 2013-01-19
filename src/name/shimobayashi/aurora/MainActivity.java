@@ -13,8 +13,9 @@ import android.hardware.SensorManager;
 
 public class MainActivity extends Activity implements SensorEventListener {
 	private SensorManager manager;
-	private float[] currentOrientationValues = { 0.0f, 0.0f, 0.0f };
-	private float[] currentAccelerationValues = { 0.0f, 0.0f, 0.0f };
+	private double[] currentOrientationValues = { 0.0, 0.0, 0.0 };
+	private double[] currentAccelerationValues = { 0.0, 0.0, 0.0 };
+	private double currentTremor = 0.0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,14 +57,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 					- currentOrientationValues[1];
 			currentAccelerationValues[2] = event.values[2]
 					- currentOrientationValues[2];
+			
+			currentTremor = Math.sqrt(Math.pow(currentAccelerationValues[0], 2) + Math.pow(currentAccelerationValues[1], 2) + Math.pow(currentAccelerationValues[2], 2));
 
-			TextView t;
-			t = (TextView) findViewById(R.id.textViewX);
-			t.setText("X:" + currentAccelerationValues[0]);
-			t = (TextView) findViewById(R.id.textViewY);
-			t.setText("Y:" + currentAccelerationValues[1]);
-			t = (TextView) findViewById(R.id.textViewZ);
-			t.setText("Z:" + currentAccelerationValues[2]);
+			TextView t = (TextView) findViewById(R.id.textViewTremor);
+			t.setText("Tremor:" + currentTremor);
 		}
 	}
 
