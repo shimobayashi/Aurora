@@ -8,6 +8,8 @@
         android:minSdkVersion="8"
         android:targetSdkVersion="16" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -21,6 +23,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="name.shimobayashi.aurora.AuroraPreferenceActivity"
+            android:label="@string/title_activity_aurora_preference" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="android.preference.PreferenceActivity" />
         </activity>
     </application>
 

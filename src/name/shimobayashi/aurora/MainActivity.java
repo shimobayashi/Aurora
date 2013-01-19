@@ -1,23 +1,43 @@
 package name.shimobayashi.aurora;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.List;
 
-import android.os.Bundle;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.app.Activity;
-import android.view.Menu;
-import android.widget.TextView;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.TextView;
 
 public class MainActivity extends Activity implements SensorEventListener {
+	private static final int REQUEST_CODE = 200; // For call preference activity
+
+	// Sense Tremor
 	private SensorManager manager;
 	private double[] currentOrientationValues = { 0.0, 0.0, 0.0 };
 	private double[] currentAccelerationValues = { 0.0, 0.0, 0.0 };
 	private double currentTremor = 0.0;
 	private double maxTremor = 0.0;
 	private long prevPostTime = 0;
+
+	// Cosm
+	private int responseCode = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -60,19 +80,51 @@ public class MainActivity extends Activity implements SensorEventListener {
 					- currentOrientationValues[1];
 			currentAccelerationValues[2] = event.values[2]
 					- currentOrientationValues[2];
-			
-			currentTremor = Math.sqrt(Math.pow(currentAccelerationValues[0], 2) + Math.pow(currentAccelerationValues[1], 2) + Math.pow(currentAccelerationValues[2], 2));
+
+			currentTremor = Math.sqrt(Math.pow(currentAccelerationValues[0], 2)
+					+ Math.pow(currentAccelerationValues[1], 2)
+					+ Math.pow(currentAccelerationValues[2], 2));
 			if (currentTremor > maxTremor)
 				maxTremor = currentTremor;
-			
-			// POST to Cosm
+
+			// PUT to Cosm
 			long currentTime = System.currentTimeMillis();
 			if (currentTime >= (prevPostTime + 1000 * 10)) { // 1 second past
-				// POST
-				//XXX
+				// PUT
+				responseCode = -1;
+				Context context = getApplicationContext();
+				SharedPreferences sp = PreferenceManager
+						.getDefaultSharedPreferences(context);
+				int feedId = sp.getInt("cosm_feed_id", 89487);
+				URI url = URI.create("http://api.cosm.com/v2/feeds/" + feedId);
+				HttpPut request = new HttpPut(url);
+				String apiKey = sp.getString("cosm_api_key", "");
+				request.addHeader("X-ApiKey", apiKey);
+				StringEntity entity;
+				try {
+					entity = new StringEntity(
+							"{\"datastreams\":[{\"id\":\"bed-tremor\",\"current_value\":\""
+									+ maxTremor + "\"}]}", "UTF-8");
+					entity.setContentType("application/x-www-form-urlencoded");
+					request.setEntity(entity);
+
+					// Do PUT
+					DefaultHttpClient httpClient = new DefaultHttpClient();
+					HttpResponse response = httpClient.execute(request);
+					responseCode = response.getStatusLine().getStatusCode();
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				} catch (ClientProtocolException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				// Update
-				TextView t = (TextView) findViewById(R.id.textViewTremor);
+				TextView t;
+				t = (TextView) findViewById(R.id.textViewTremor);
 				t.setText("Tremor:" + maxTremor);
+				t = (TextView) findViewById(R.id.textViewResponseCode);
+				t.setText("ResponseCode:" + responseCode);
 				maxTremor = -1;
 				prevPostTime = currentTime;
 			}
@@ -84,6 +136,17 @@ public class MainActivity extends Activity implements SensorEventListener {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_settings:
+			Intent intent = new Intent(this, AuroraPreferenceActivity.class);
+			startActivityForResult(intent, REQUEST_CODE);
+			return true;
+		}
+		return false;
 	}
 
 	@Override

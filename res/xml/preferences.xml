@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <PreferenceCategory android:title="COSM" >
+        <EditTextPreference
+            android:dialogTitle="COSM feed ID"
+            android:key="cosm_feed_id"
+            android:summary="Feed ID"
+            android:title="Feed ID" />
+        <EditTextPreference
+            android:dialogTitle="COSM API Key"
+            android:key="cosm_api_key"
+            android:summary="API Key"
+            android:title="API Key" />
+    </PreferenceCategory>
+</PreferenceScreen>
