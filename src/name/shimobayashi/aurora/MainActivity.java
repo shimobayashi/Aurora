@@ -41,7 +41,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
 	// Sense Sound
 	private SoundLevelMeter soundLevelMeter;
-	private double maxSoundLevel = -100;
+	private double maxSoundLevel = -1;
 
 	// Cosm
 	private long prevPostTime = 0;
@@ -158,7 +158,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 				t = (TextView) findViewById(R.id.textViewResponseCode);
 				t.setText("ResponseCode:" + responseCode);
 				maxTremor = -1;
-				maxSoundLevel = -100;
+				maxSoundLevel = -1;
 				prevPostTime = currentTime;
 			}
 		}
