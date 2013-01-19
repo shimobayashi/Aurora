@@ -5,6 +5,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.List;
 
+import name.shimobayashi.aurora.SoundLevelMeter.SoundLevelMeterListener;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPut;
@@ -21,11 +23,13 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity implements SensorEventListener,
+		SoundLevelMeterListener {
 	private static final int REQUEST_CODE = 200; // For call preference activity
 
 	// Sense Tremor
@@ -33,10 +37,14 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private double[] currentOrientationValues = { 0.0, 0.0, 0.0 };
 	private double[] currentAccelerationValues = { 0.0, 0.0, 0.0 };
 	private double currentTremor = 0.0;
-	private double maxTremor = 0.0;
-	private long prevPostTime = 0;
+	private double maxTremor = -1;
+
+	// Sense Sound
+	private SoundLevelMeter soundLevelMeter;
+	private double maxSoundLevel = -100;
 
 	// Cosm
+	private long prevPostTime = 0;
 	private int responseCode = 0;
 
 	@Override
@@ -45,22 +53,41 @@ public class MainActivity extends Activity implements SensorEventListener {
 		setContentView(R.layout.activity_main);
 
 		manager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		soundLevelMeter = new SoundLevelMeter();
+		soundLevelMeter.setListener(this);
+		(new Thread(soundLevelMeter)).start();
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
 		manager.unregisterListener(this);
+		soundLevelMeter.pause();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+
 		List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ACCELEROMETER);
 		if (sensors.size() > 0) {
 			Sensor s = sensors.get(0);
 			manager.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
 		}
+
+		soundLevelMeter.resume();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		soundLevelMeter.stop();
+	}
+
+	@Override
+	public void onMeasure(double db) {
+		// Log.d("SoundLevelMeter", "dB:" + db);
+		maxSoundLevel = Math.max(maxSoundLevel, db);
 	}
 
 	@Override
@@ -88,8 +115,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 				maxTremor = currentTremor;
 
 			// PUT to Cosm
+			// by the way, PUT and update sound level
 			long currentTime = System.currentTimeMillis();
-			if (currentTime >= (prevPostTime + 1000 * 10)) { // 1 second past
+			if (currentTime >= (prevPostTime + 1000 * 10)) { // 10 second past
 				// PUT
 				responseCode = -1;
 				Context context = getApplicationContext();
@@ -104,7 +132,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 				try {
 					entity = new StringEntity(
 							"{\"datastreams\":[{\"id\":\"bed-tremor\",\"current_value\":\""
-									+ maxTremor + "\"}]}", "UTF-8");
+									+ maxTremor
+									+ "\"},{\"id\":\"bed-sound-level\",\"current_value\":\""
+									+ maxSoundLevel + "\"}]}", "UTF-8");
 					entity.setContentType("application/x-www-form-urlencoded");
 					request.setEntity(entity);
 
@@ -123,9 +153,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 				TextView t;
 				t = (TextView) findViewById(R.id.textViewTremor);
 				t.setText("Tremor:" + maxTremor);
+				t = (TextView) findViewById(R.id.textViewSoundLevel);
+				t.setText("dB:" + maxSoundLevel);
 				t = (TextView) findViewById(R.id.textViewResponseCode);
 				t.setText("ResponseCode:" + responseCode);
 				maxTremor = -1;
+				maxSoundLevel = -100;
 				prevPostTime = currentTime;
 			}
 		}

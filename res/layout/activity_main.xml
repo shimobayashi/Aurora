@@ -18,6 +18,12 @@
         android:text="Tremor:" />
 
     <TextView
+        android:id="@+id/textViewSoundLevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="dB:" />
+
+    <TextView
         android:id="@+id/textViewResponseCode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
