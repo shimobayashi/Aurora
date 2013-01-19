@@ -16,6 +16,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private double[] currentOrientationValues = { 0.0, 0.0, 0.0 };
 	private double[] currentAccelerationValues = { 0.0, 0.0, 0.0 };
 	private double currentTremor = 0.0;
+	private double maxTremor = 0.0;
+	private long prevPostTime = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+			// Update currentTremor
 			currentOrientationValues[0] = event.values[0] * 0.1f
 					+ currentOrientationValues[0] * (1.0f - 0.1f);
 			currentOrientationValues[1] = event.values[1] * 0.1f
@@ -59,9 +62,20 @@ public class MainActivity extends Activity implements SensorEventListener {
 					- currentOrientationValues[2];
 			
 			currentTremor = Math.sqrt(Math.pow(currentAccelerationValues[0], 2) + Math.pow(currentAccelerationValues[1], 2) + Math.pow(currentAccelerationValues[2], 2));
-
-			TextView t = (TextView) findViewById(R.id.textViewTremor);
-			t.setText("Tremor:" + currentTremor);
+			if (currentTremor > maxTremor)
+				maxTremor = currentTremor;
+			
+			// POST to Cosm
+			long currentTime = System.currentTimeMillis();
+			if (currentTime >= (prevPostTime + 1000 * 10)) { // 1 second past
+				// POST
+				//XXX
+				// Update
+				TextView t = (TextView) findViewById(R.id.textViewTremor);
+				t.setText("Tremor:" + maxTremor);
+				maxTremor = -1;
+				prevPostTime = currentTime;
+			}
 		}
 	}
 
