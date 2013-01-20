@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
     <PreferenceCategory android:title="COSM" >
         <EditTextPreference
             android:dialogTitle="COSM feed ID"
+            android:inputType="number"
             android:key="cosm_feed_id"
             android:summary="Feed ID"
             android:title="Feed ID" />
@@ -11,5 +13,12 @@
             android:key="cosm_api_key"
             android:summary="API Key"
             android:title="API Key" />
+        <EditTextPreference
+            android:dialogTitle="dB Base Value"
+            android:inputType="number"
+            android:key="decibel_base_value"
+            android:summary="Base value at calcuration dB"
+            android:title="db Base Value" />
     </PreferenceCategory>
+
 </PreferenceScreen>

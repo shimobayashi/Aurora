@@ -55,6 +55,10 @@ public class MainActivity extends Activity implements SensorEventListener,
 		manager = (SensorManager) getSystemService(SENSOR_SERVICE);
 		soundLevelMeter = new SoundLevelMeter();
 		soundLevelMeter.setListener(this);
+		SharedPreferences sp = PreferenceManager
+				.getDefaultSharedPreferences(getApplicationContext());
+		double baseValue = Double.valueOf(sp.getString("decibel_base_value", "12"));
+		soundLevelMeter.setBaseValue(baseValue);
 		(new Thread(soundLevelMeter)).start();
 	}
 
@@ -88,6 +92,14 @@ public class MainActivity extends Activity implements SensorEventListener,
 	public void onMeasure(double db) {
 		// Log.d("SoundLevelMeter", "dB:" + db);
 		maxSoundLevel = Math.max(maxSoundLevel, db);
+
+		// On the way, update base value
+		Context context = getApplicationContext();
+		SharedPreferences sp = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		double baseValue = Double.valueOf(sp.getString("decibel_base_value",
+				"12"));
+		soundLevelMeter.setBaseValue(baseValue);
 	}
 
 	@Override
@@ -123,7 +135,8 @@ public class MainActivity extends Activity implements SensorEventListener,
 				Context context = getApplicationContext();
 				SharedPreferences sp = PreferenceManager
 						.getDefaultSharedPreferences(context);
-				int feedId = sp.getInt("cosm_feed_id", 89487);
+				int feedId = Integer.valueOf(sp.getString("cosm_feed_id",
+						"89487"));
 				URI url = URI.create("http://api.cosm.com/v2/feeds/" + feedId);
 				HttpPut request = new HttpPut(url);
 				String apiKey = sp.getString("cosm_api_key", "");

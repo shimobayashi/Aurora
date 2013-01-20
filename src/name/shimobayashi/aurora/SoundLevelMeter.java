@@ -14,6 +14,7 @@ public class SoundLevelMeter implements Runnable {
 	private AudioRecord audioRecord;
 	private boolean isRecording;
 	private boolean isPausing;
+	private double baseValue;
 
 	public interface SoundLevelMeterListener {
 		void onMeasure(double db);
@@ -30,6 +31,7 @@ public class SoundLevelMeter implements Runnable {
 				AudioFormat.ENCODING_PCM_16BIT, bufferSize);
 		listener = null;
 		isRecording = true;
+		baseValue = 12.0;
 		pause();
 	}
 
@@ -56,7 +58,7 @@ public class SoundLevelMeter implements Runnable {
 					maxValue = Math.max(maxValue, buffer[i]);
 				}
 
-				double db = 20.0 * Math.log10(maxValue / 12.0);
+				double db = 20.0 * Math.log10(maxValue / baseValue);
 				Log.d("SoundLevelMeter", "dB:" + db);
 
 				if (listener != null) {
@@ -90,5 +92,9 @@ public class SoundLevelMeter implements Runnable {
 		if (isPausing)
 			audioRecord.startRecording();
 		isPausing = false;
+	}
+	
+	public void setBaseValue(double value) {
+		baseValue = value;
 	}
 }
