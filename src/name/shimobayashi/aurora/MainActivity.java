@@ -76,7 +76,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 		List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ACCELEROMETER);
 		if (sensors.size() > 0) {
 			Sensor s = sensors.get(0);
-			manager.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
+			manager.registerListener(this, s, SensorManager.SENSOR_DELAY_FASTEST);
 		}
 
 		soundLevelMeter.resume();
